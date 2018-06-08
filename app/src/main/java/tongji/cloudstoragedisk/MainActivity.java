@@ -1,6 +1,7 @@
 package tongji.cloudstoragedisk;
 
 import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -16,8 +17,12 @@ import android.widget.Toast;
 
 import org.apache.http.protocol.HTTP;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -116,7 +121,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         public void upload(final Directory directory) {
             new Thread() {
                 public void run() {
-
+                    String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+                    Map<String,String> params=new HashMap<>();
+                    String path= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/files.zip";
+                    params.put("path",directory.path);
+                    params.put("submit","点我上传文件");
+                    uploadFile(host+"/upload",params,path);
                 }
             }.start();
         }
@@ -149,22 +159,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             listView.setAdapter(adapter);
             listView.setOnItemClickListener(this);
         }
-//        else{
-//            new Thread() {
-//                @SuppressLint("SdCardPath")
-//                public void run() {
-//                    try {
-//                        String host=ConfigHelper.getProperties(App.getAppContext(), "host");
-//                        String path=URLEncoder.encode(selected.path, HTTP.UTF_8);
-//                        String filename = selected.path.substring(selected.path.lastIndexOf('/') + 1);
-//                        downloadFile(host+"/download?path="+ path,"/sdcard/Download/",filename);
-//                    }
-//                    catch (Exception e){
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }.start();
-//        }
     }
     private List<Map<String,Object>> getData(FoldersResult foldersResult){
         List<Directory> data=foldersResult.data.subdic;
@@ -195,14 +189,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 switch (msg.what)
                 {
                     case 0:
-                        Toast.makeText(MainActivity.this, "文件下载开始", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "传输开始", Toast.LENGTH_SHORT).show();
                         progressBar.setVisibility(View.VISIBLE);
                         progressBar.setMax(totalSize);
                     case 1:
                         progressBar.setProgress(finishedSize);
                         break;
                     case 2:
-                        Toast.makeText(MainActivity.this, "文件下载完成", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "传输完成", Toast.LENGTH_SHORT).show();
                         progressBar.setVisibility(View.INVISIBLE);
                         break;
                     case -1:
@@ -221,17 +215,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             InputStream inputStream = conn.getInputStream();
             this.totalSize = conn.getContentLength();
             PermisionUtils.verifyStoragePermissions(this);
-            FileOutputStream fileOutputStream = new FileOutputStream(path + filename);
+            FileOutputStream outputStream = new FileOutputStream(path + filename);
             byte buffer[] = new byte[4096];
             finishedSize = 0;
             sendMsg(0);
-            while (true) {
-                int result = inputStream.read(buffer);
-                if (result == -1) {
-                    break;
-                }
-                fileOutputStream.write(buffer, 0, result);
-                fileOutputStream.flush();
+            int result;
+            while ((result = inputStream.read(buffer))!=-1) {
+                outputStream.write(buffer, 0, result);
+                outputStream.flush();
                 finishedSize += result;
                 sendMsg(1);
             }
@@ -243,29 +234,61 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
-    public void uploadFile(String url, String path,String filename){
+    public void uploadFile(String url,Map<String, String> params,String path){
+        String BOUNDARY = "----WebKitFormBoundaryT1HoybnYeFOGFlBR";
         try {
-            URLConnection conn = new URL(url).openConnection();
-            conn.connect();
-            InputStream inputStream = conn.getInputStream();
-            this.totalSize = conn.getContentLength();
-            PermisionUtils.verifyStoragePermissions(this);
-            FileOutputStream fileOutputStream = new FileOutputStream(path + filename);
-            byte buffer[] = new byte[4096];
-            finishedSize = 0;
-            sendMsg(0);
-            while (true) {
-                int result = inputStream.read(buffer);
-                if (result == -1) {
-                    break;
+            StringBuilder stringBuilder = new StringBuilder();
+            if (params != null) {
+                for (String key : params.keySet()) {
+                    stringBuilder.append("--").append(BOUNDARY).append("\r\n");
+                    stringBuilder.append("Content-Disposition: form-data; name=\"")
+                            .append(key).append("\"").append("\r\n");
+                    stringBuilder.append("\r\n");
+                    stringBuilder.append(params.get(key)).append("\r\n");
                 }
-                fileOutputStream.write(buffer, 0, result);
-                fileOutputStream.flush();
+            }
+            File uploadFile=new File(path);
+            stringBuilder.append("--").append(BOUNDARY).append("\r\n");
+            stringBuilder.append("Content-Disposition: form-data; name=\"file\"; filename=\"")
+                    .append(path.substring(path.lastIndexOf('/') + 1)).append("\"").append("\r\n");
+            stringBuilder.append("Content-Type: application/octet-stream" + "\r\n");
+            stringBuilder.append("\r\n");
+            byte[] headerInfo = stringBuilder.toString().getBytes("UTF-8");
+            byte[] endInfo = ("\r\n--" + BOUNDARY + "--\r\n").getBytes("UTF-8");
+            HttpURLConnection connection = (HttpURLConnection)new URL(url).openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
+            SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+            connection.setRequestProperty("Cookie", sharedPreferences.getString("cookies", ""));
+            connection.setRequestProperty("Content-Length",String.valueOf(headerInfo.length + uploadFile.length() + endInfo.length));
+            connection.setChunkedStreamingMode(51200);
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(10 * 60 * 1000);
+
+            OutputStream outputStream = connection.getOutputStream();
+            InputStream inputStream = new FileInputStream(uploadFile);
+            outputStream.write(headerInfo);
+            this.totalSize = (int)uploadFile.length();
+            byte[] buffer = new byte[4096];
+            finishedSize=0;
+            sendMsg(0);
+            int result;
+            while ((result = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, result);
+                outputStream.flush();
                 finishedSize += result;
                 sendMsg(1);
             }
-            sendMsg(2);
+            outputStream.write(endInfo);
             inputStream.close();
+            outputStream.close();
+            if (connection.getResponseCode() == 200) {
+                sendMsg(2);
+            }
+            else{
+                sendMsg(-1);
+            }
         }
         catch (Exception e){
             e.printStackTrace();
