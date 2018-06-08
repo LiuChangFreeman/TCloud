@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         progressBar =(ProgressBar)findViewById(R.id.progress);
-        //RequestResult requestResult= (new RequestHelper()).Login("root","123456");
+        RequestResult requestResult= (new RequestHelper()).Login("root","123456");
         foldersResult=(new RequestHelper()).GetFolders("/home");
         currentPath="/home";
         listView = (ListView) findViewById(R.id.listView);
