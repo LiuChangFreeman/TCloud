@@ -1,6 +1,7 @@
 package tongji.cloudstoragedisk;
 
 import android.annotation.SuppressLint;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
@@ -33,6 +34,8 @@ import tongji.cloudstoragedisk.Model.FoldersResult;
 import tongji.cloudstoragedisk.Model.PermisionUtils;
 import tongji.cloudstoragedisk.Model.RequestHelper;
 import tongji.cloudstoragedisk.Model.RequestResult;
+
+import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener{
     private ListView listView;
@@ -95,13 +98,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         @Override
         public void download(final Directory directory) {
             new Thread() {
-                @SuppressLint("SdCardPath")
                 public void run() {
                     try {
                         String host=ConfigHelper.getProperties(App.getAppContext(), "host");
                         String path=URLEncoder.encode(directory.path, HTTP.UTF_8);
                         String filename = directory.path.substring(directory.path.lastIndexOf('/') + 1);
-                        downloadFile(host+"/download?path="+ path,"/sdcard/Download/",filename);
+                        String savePath= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/";
+                        downloadFile(host+"/download?path="+ path,savePath,filename);
                     }
                     catch (Exception e){
                         e.printStackTrace();
