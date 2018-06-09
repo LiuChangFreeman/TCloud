@@ -107,13 +107,12 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:src="@drawable/only" />
-
             <TextView
                 android:layout_width="40dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:drawablePadding="15dp"
-                android:text="独占"
+                android:text="隐藏"
                 android:textAlignment="center"
                 android:textSize="16sp" />
         </LinearLayout>

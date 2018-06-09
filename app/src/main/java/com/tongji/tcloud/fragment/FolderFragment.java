@@ -1,7 +1,9 @@
 package com.tongji.tcloud.fragment;
 
+import com.alibaba.fastjson.JSON;
 import com.tongji.tcloud.R;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -25,10 +27,12 @@ import android.widget.Toast;
 
 import org.apache.http.protocol.HTTP;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -54,7 +58,8 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
     private List<Map<String,Object>> list;
     private FolderAdapter adapter;
     private RequestHelper requestHelper;
-    private static String currentPath;
+    private String currentPath;
+    private String uploadFile="files.zip";
     int totalSize;
     int finishedSize;
 
@@ -108,11 +113,26 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             new Thread() {
                 public void run() {
                     try {
-                        String host=ConfigHelper.getProperties(App.getAppContext(), "host");
-                        String path=URLEncoder.encode(directory.path, HTTP.UTF_8);
-                        String filename = directory.path.substring(directory.path.lastIndexOf('/') + 1);
-                        String savePath= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/";
-                        downloadFile(host+"/download?path="+ path,savePath,filename);
+                        if(directory.type.equals("file")){
+                            String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+                            String path=URLEncoder.encode(directory.path, HTTP.UTF_8);
+                            String filename = directory.path.substring(directory.path.lastIndexOf('/') + 1);
+                            String savePath= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/";
+                            downloadFile(host+"/download?path="+ path,savePath,filename);
+                        }
+                        else{
+                            String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+                            String savePath= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/";
+                            Map<String,String> params=new HashMap<>();
+                            params.put("submit","下载");
+                            params.put("path",directory.path);
+                            String fileName=directory.path.substring(directory.path.lastIndexOf('/'))+".zip";
+                            downloadFolder(host+"/multiple",params,savePath+fileName);
+                            //UnzipHelper.Unzip(savePath+fileName,savePath);
+                            UnzipHelper.unPartZip(savePath+fileName,savePath);
+                            File zipfile=new File(savePath+fileName);
+                            zipfile.delete();
+                        }
                     }
                     catch (Exception e){
                         e.printStackTrace();
@@ -124,12 +144,22 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
         public void upload(final Directory directory) {
             new Thread() {
                 public void run() {
-                    String host=ConfigHelper.getProperties(App.getAppContext(), "host");
-                    Map<String,String> params=new HashMap<>();
-                    String path= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/files.zip";
-                    params.put("path",directory.path);
-                    params.put("submit","点我上传文件");
-                    uploadFile(host+"/upload",params,path);
+                    if(directory.type.equals("folder")) {
+                        String host = ConfigHelper.getProperties(App.getAppContext(), "host");
+                        Map<String, String> params = new HashMap<>();
+                        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/";
+                        params.put("path", directory.path);
+                        params.put("submit", "点我上传文件");
+                        uploadFile(host + "/upload", params, path + uploadFile);
+                    }
+                    else{
+                        Message msg = new Message();
+                        msg.what = -1;
+                        Bundle data = new Bundle();
+                        data.putString("error","非文件夹不能上传");
+                        msg.setData(data);
+                        handler.sendMessage(msg);
+                    }
                 }
             }.start();
         }
@@ -175,7 +205,12 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
                 map.put("item_image",R.drawable.file);
             }
             else{
-                map.put("item_image",R.drawable.folder_unshared);
+                if(item.permission.equals("只读")){
+                    map.put("item_image",R.drawable.folder_unshared);
+                }
+                else{
+                    map.put("item_image",R.drawable.folder_shared);
+                }
             }
             map.put("item_tv_main",item.path.substring(item.path.lastIndexOf('/') + 1));
             map.put("item_tv_time",item.time);
@@ -216,10 +251,10 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
     };
     public void downloadFile(String url, String path,String filename){
         try {
-            URLConnection conn = new URL(url).openConnection();
-            conn.connect();
-            InputStream inputStream = conn.getInputStream();
-            this.totalSize = conn.getContentLength();
+            URLConnection connection = new URL(url).openConnection();
+            connection.connect();
+            InputStream inputStream = connection.getInputStream();
+            this.totalSize = connection.getContentLength();
             PermisionUtils.verifyStoragePermissions(getActivity());
             FileOutputStream outputStream = new FileOutputStream(path + filename);
             byte buffer[] = new byte[4096];
@@ -229,6 +264,50 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             while ((result = inputStream.read(buffer))!=-1) {
                 outputStream.write(buffer, 0, result);
                 outputStream.flush();
+                finishedSize += result;
+                sendMsg(1);
+            }
+            sendMsg(2);
+            inputStream.close();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+    public void downloadFolder(String url,Map<String, String> params,String path){
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            if (params != null) {
+                for (String key : params.keySet()) {
+                    stringBuilder.append(key).append("=");
+                    stringBuilder.append(Uri.encode(params.get(key))).append("&");
+                }
+            }
+            stringBuilder.deleteCharAt(stringBuilder.length()-1);
+            HttpURLConnection connection = (HttpURLConnection)new URL(url).openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+            connection.setRequestProperty("Cookie", sharedPreferences.getString("cookies", ""));
+            connection.setRequestProperty("Content-Length",String.valueOf(stringBuilder.length()));
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(10 * 60 * 1000);
+            OutputStream outputStream = connection.getOutputStream();
+            outputStream.write(stringBuilder.toString().getBytes("UTF-8"));
+            outputStream.close();
+
+            InputStream inputStream = connection.getInputStream();
+            this.totalSize =  connection.getContentLength();
+            PermisionUtils.verifyStoragePermissions(getActivity());
+            FileOutputStream fileOutputStream = new FileOutputStream(path);
+            byte[] buffer = new byte[4096];
+            finishedSize = 0;
+            sendMsg(0);
+            int result;
+            while ((result = inputStream.read(buffer))!=-1) {
+                fileOutputStream.write(buffer, 0, result);
+                fileOutputStream.flush();
                 finishedSize += result;
                 sendMsg(1);
             }
@@ -267,7 +346,7 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
             connection.setRequestProperty("Cookie", sharedPreferences.getString("cookies", ""));
             connection.setRequestProperty("Content-Length",String.valueOf(headerInfo.length + uploadFile.length() + endInfo.length));
-            connection.setChunkedStreamingMode(51200);
+            connection.setChunkedStreamingMode(4096);
             connection.setUseCaches(false);
             connection.setDoOutput(true);
             connection.setConnectTimeout(10 * 60 * 1000);
@@ -287,13 +366,32 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
                 sendMsg(1);
             }
             outputStream.write(endInfo);
-            inputStream.close();
             outputStream.close();
+            inputStream.close();
             if (connection.getResponseCode() == 200) {
                 sendMsg(2);
+                InputStreamReader inputStreamReader = new InputStreamReader(connection.getInputStream(),"utf-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String resopnse = bufferedReader.readLine();
+                RequestResult requestResult= JSON.parseObject(resopnse,RequestResult.class);
+                if(!requestResult.success){
+                    Message msg = new Message();
+                    msg.what = -1;
+                    Bundle data = new Bundle();
+                    data.putString("error",requestResult.error);
+                    msg.setData(data);
+                    handler.sendMessage(msg);
+                }
             }
             else{
-                sendMsg(-1);
+                if(!requestResult.success){
+                    Message msg = new Message();
+                    msg.what = -1;
+                    Bundle data = new Bundle();
+                    data.putString("error","网络异常");
+                    msg.setData(data);
+                    handler.sendMessage(msg);
+                }
             }
         }
         catch (Exception e){

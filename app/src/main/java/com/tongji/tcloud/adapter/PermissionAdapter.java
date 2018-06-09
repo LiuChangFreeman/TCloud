@@ -1,6 +1,7 @@
 package com.tongji.tcloud.adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +21,7 @@ import com.tongji.tcloud.R;
 public class PermissionAdapter extends SimpleAdapter{
 
     private Context context;
-    private Map<String, Object> map;
+    public Map<String, Object> map;
     private int resource;
     private String[] from;
     private int[] to;
@@ -44,7 +45,7 @@ public class PermissionAdapter extends SimpleAdapter{
         this.resource = resource;
         this.from = from;
         this.to = to;
-        this.context = context;
+        this.context=context;
         this.directories=directories;
     }
 
@@ -74,6 +75,9 @@ public class PermissionAdapter extends SimpleAdapter{
         viewHolder.item_image.setImageResource((int)map.get(from[0]));
         viewHolder.item_tv_main.setText((String)map.get(from[1]));
         viewHolder.item_tv_time.setText((String)map.get(from[2]));
+        viewHolder.item_rd.setBackgroundColor(Color.parseColor((String)map.get(from[3])));
+        viewHolder.item_wr.setBackgroundColor(Color.parseColor((String)map.get(from[4])));
+        viewHolder.item_only.setBackgroundColor(Color.parseColor((String)map.get(from[5])));
         //设置点击展开菜单控件为未选择状态，选择状态图标会改变，编写背景xml文件即可实现
         viewHolder.item_open.setSelected(false);
 

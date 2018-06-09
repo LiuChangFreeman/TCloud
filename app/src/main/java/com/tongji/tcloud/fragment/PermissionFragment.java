@@ -50,7 +50,7 @@ import static android.content.Context.MODE_PRIVATE;
 public class PermissionFragment extends Fragment implements AdapterView.OnItemClickListener {
     private ListView listView;
     private FoldersResult foldersResult;
-    private List<Map<String,Object>> list;
+    private static List<Map<String,Object>> list;
     private PermissionAdapter adapter;
     private static String currentPath;
     private String username="b12345678";
@@ -67,8 +67,10 @@ public class PermissionFragment extends Fragment implements AdapterView.OnItemCl
         list=getData(foldersResult);
         adapter = new PermissionAdapter(getActivity(),foldersResult.data.subdic,list,
                 R.layout.list_item_permission,
-                new String[]{"item_image","item_tv_main","item_tv_time"},
-                new int[]{R.id.item_image,R.id.item_tv_main,R.id.item_tv_time}
+                new String[]{"item_image","item_tv_main","item_tv_time",
+                        "item_rd","item_wr","item_only"},
+                new int[]{R.id.item_image,R.id.item_tv_main,R.id.item_tv_time,
+                        R.id.item_rd, R.id.item_wr, R.id.item_only}
         );
         adapter.setListener(oprationListener);
         listView.setAdapter(adapter);
@@ -84,8 +86,10 @@ public class PermissionFragment extends Fragment implements AdapterView.OnItemCl
                 list=getData(foldersResult);
                 adapter = new  PermissionAdapter(getActivity(),foldersResult.data.subdic,list,
                         R.layout.list_item_permission,
-                        new String[]{"item_image","item_tv_main","item_tv_time"},
-                        new int[]{R.id.item_image,R.id.item_tv_main,R.id.item_tv_time}
+                        new String[]{"item_image","item_tv_main","item_tv_time",
+                                "item_rd","item_wr","item_only"},
+                        new int[]{R.id.item_image,R.id.item_tv_main,R.id.item_tv_time,
+                        R.id.item_rd, R.id.item_wr, R.id.item_only}
                 );
                 adapter.setListener(oprationListener);
                 listView.setAdapter(adapter);
@@ -103,6 +107,16 @@ public class PermissionFragment extends Fragment implements AdapterView.OnItemCl
         public void readonly(final Directory directory) {
             RequestResult requestResult= (new RequestHelper()).SetPermission(directory.path,username,"只读");
             if(requestResult.success){
+                for (Directory item: foldersResult.data.subdic) {
+                    if(item==directory){
+                        item.permission="只读";
+                    }
+                }
+                Map<String,Object> map= list.get(foldersResult.data.subdic.indexOf(directory));
+                map.put("item_rd","#ffffff");
+                map.put("item_wr","#d6d6d6");
+                map.put("item_only","#d6d6d6");
+                adapter.notifyDataSetChanged();
                 String notice=String.format("用户 %s 路径 %s 权限设置为:%s成功!",username,directory.path,"只读");
                 Toast.makeText(getActivity(), notice, Toast.LENGTH_SHORT).show();
             }
@@ -114,6 +128,16 @@ public class PermissionFragment extends Fragment implements AdapterView.OnItemCl
         public void write(final Directory directory) {
             RequestResult requestResult= (new RequestHelper()).SetPermission(directory.path,username,"读写");
             if(requestResult.success){
+                for (Directory item: foldersResult.data.subdic) {
+                    if(item==directory){
+                        item.permission="读写";
+                    }
+                }
+                Map<String,Object> map= list.get(foldersResult.data.subdic.indexOf(directory));
+                map.put("item_rd","#d6d6d6");
+                map.put("item_wr","#ffffff");
+                map.put("item_only","#d6d6d6");
+                adapter.notifyDataSetChanged();
                 String notice=String.format("用户 %s 路径 %s 权限设置为:%s成功!",username,directory.path,"读写");
                 Toast.makeText(getActivity(), notice, Toast.LENGTH_SHORT).show();
             }
@@ -123,9 +147,19 @@ public class PermissionFragment extends Fragment implements AdapterView.OnItemCl
         }
         @Override
         public void only(final Directory directory) {
-            RequestResult requestResult= (new RequestHelper()).SetPermission(directory.path,username,"独占");
+            RequestResult requestResult= (new RequestHelper()).SetPermission(directory.path,username,"隐藏");
             if(requestResult.success){
-                String notice=String.format("用户 %s 路径 %s 权限设置为:%s成功!",username,directory.path,"独占");
+                for (Directory item: foldersResult.data.subdic) {
+                    if(item==directory){
+                        item.permission="隐藏";
+                    }
+                }
+                Map<String,Object> map= list.get(foldersResult.data.subdic.indexOf(directory));
+                map.put("item_rd","#d6d6d6");
+                map.put("item_wr","#d6d6d6");
+                map.put("item_only","#ffffff");
+                adapter.notifyDataSetChanged();
+                String notice=String.format("用户 %s 路径 %s 权限设置为:%s成功!",username,directory.path,"隐藏");
                 Toast.makeText(getActivity(), notice, Toast.LENGTH_SHORT).show();
             }
             else{
@@ -142,8 +176,10 @@ public class PermissionFragment extends Fragment implements AdapterView.OnItemCl
             list=getData(foldersResult);
             adapter = new  PermissionAdapter(getActivity(),foldersResult.data.subdic,list,
                     R.layout.list_item_permission,
-                    new String[]{"item_image","item_tv_main","item_tv_time"},
-                    new int[]{R.id.item_image,R.id.item_tv_main,R.id.item_tv_time}
+                    new String[]{"item_image","item_tv_main","item_tv_time",
+                            "item_rd","item_wr","item_only"},
+                    new int[]{R.id.item_image,R.id.item_tv_main,R.id.item_tv_time,
+                            R.id.item_rd, R.id.item_wr, R.id.item_only}
             );
             adapter.setListener(oprationListener);
             listView.setAdapter(adapter);
@@ -163,6 +199,24 @@ public class PermissionFragment extends Fragment implements AdapterView.OnItemCl
             }
             map.put("item_tv_main",item.path.substring(item.path.lastIndexOf('/') + 1));
             map.put("item_tv_time",item.time);
+            if(item.permission.equals("只读")){
+                map.put("item_rd","#ffffff");
+            }
+            else{
+                map.put("item_rd","#d6d6d6");
+            }
+            if(item.permission.equals("读写")){
+                map.put("item_wr","#ffffff");
+            }
+            else{
+                map.put("item_wr","#d6d6d6");
+            }
+            if(item.permission.equals("隐藏")){
+                map.put("item_only","#ffffff");
+            }
+            else{
+                map.put("item_only","#d6d6d6");
+            }
             list.add(map);
         }
         return list;

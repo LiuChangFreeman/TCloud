@@ -62,6 +62,64 @@ public class RequestHelper {
         }
         return  requestResult;
     }
+    public RequestResult Register(String username,String password){
+        RequestResult requestResult=new RequestResult();
+        HttpClient httpClient=new DefaultHttpClient();
+        String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+        HttpPost httpPost = new HttpPost(host+"/register");
+        SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+        httpPost.setHeader("Cookie", sharedPreferences.getString("cookies", ""));
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("username", username));
+        params.add(new BasicNameValuePair("password", password));
+        params.add(new BasicNameValuePair("mobile", "true"));
+        try {
+            httpPost.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+            HttpResponse response = httpClient.execute(httpPost);
+            HttpEntity responseEntity = response.getEntity();
+            if(responseEntity!=null) {
+                String result = EntityUtils.toString(responseEntity, HTTP.UTF_8);
+                requestResult= JSON.parseObject(result, RequestResult.class);
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        finally{
+            httpClient.getConnectionManager().shutdown();
+        }
+        return  requestResult;
+    }
+    public RequestResult ChangePassword(String username,String oldpassword,String newpassword){
+        RequestResult requestResult=new RequestResult();
+        HttpClient httpClient=new DefaultHttpClient();
+        String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+        HttpPost httpPost = new HttpPost(host+"/changepassword");
+        SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+        httpPost.setHeader("Cookie", sharedPreferences.getString("cookies", ""));
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("username", username));
+        params.add(new BasicNameValuePair("oldpassword", oldpassword));
+        params.add(new BasicNameValuePair("newpassword1", newpassword));
+        params.add(new BasicNameValuePair("newpassword2", newpassword));
+        params.add(new BasicNameValuePair("mobile", "true"));
+        try {
+            httpPost.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+            HttpResponse response = httpClient.execute(httpPost);
+            HttpEntity responseEntity = response.getEntity();
+            if(responseEntity!=null) {
+                String result = EntityUtils.toString(responseEntity, HTTP.UTF_8);
+                requestResult= JSON.parseObject(result, RequestResult.class);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            httpClient.getConnectionManager().shutdown();
+        }
+        return  requestResult;
+    }
     public FoldersResult GetFolders(String path){
         FoldersResult foldersResult=new FoldersResult();
         HttpClient httpClient=new DefaultHttpClient();
