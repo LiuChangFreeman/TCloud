@@ -78,8 +78,7 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
         progressBar =(ProgressBar)view.findViewById(R.id.progress);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-        requestResult=(new RequestHelper()).ChangePassword("b12345678","3456789","123456");
-        requestResult=(new RequestHelper()).Login("b12345678","123456");
+
         foldersResult=(new RequestHelper()).GetFolders("/home");
         currentPath="/home";
         list=getData(foldersResult);
@@ -278,10 +277,15 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
     };
     public void downloadFile(String url, String path,String filename){
         try {
-            URLConnection connection = new URL(url).openConnection();
+            HttpURLConnection connection = (HttpURLConnection)new URL(url).openConnection();
+            connection.setRequestMethod("GET");
+            connection.setUseCaches(false);
+            connection.setDoOutput(false);
+            //connection.setChunkedStreamingMode(51200);
             connection.connect();
+
+            this.totalSize = connection.getHeaderFieldInt("Accept-Length", 0);
             InputStream inputStream = connection.getInputStream();
-            this.totalSize = connection.getContentLength();
             PermisionUtils.verifyStoragePermissions(getActivity());
             FileOutputStream outputStream = new FileOutputStream(path + filename);
             byte buffer[] = new byte[4096];
@@ -289,10 +293,10 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             sendMsg(0);
             int result;
             while ((result = inputStream.read(buffer))!=-1) {
+                sendMsg(1);
                 outputStream.write(buffer, 0, result);
                 outputStream.flush();
                 finishedSize += result;
-                sendMsg(1);
             }
             sendMsg(2);
             inputStream.close();
@@ -319,13 +323,14 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             connection.setRequestProperty("Content-Length",String.valueOf(stringBuilder.length()));
             connection.setUseCaches(false);
             connection.setDoOutput(true);
+            connection.setChunkedStreamingMode(4096);
             connection.setConnectTimeout(10 * 60 * 1000);
             OutputStream outputStream = connection.getOutputStream();
             outputStream.write(stringBuilder.toString().getBytes("UTF-8"));
             outputStream.close();
 
+            this.totalSize = connection.getHeaderFieldInt("Accept-Length", 0);
             InputStream inputStream = connection.getInputStream();
-            this.totalSize =  connection.getContentLength();
             PermisionUtils.verifyStoragePermissions(getActivity());
             FileOutputStream fileOutputStream = new FileOutputStream(path);
             byte[] buffer = new byte[4096];
@@ -333,10 +338,10 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             sendMsg(0);
             int result;
             while ((result = inputStream.read(buffer))!=-1) {
+                sendMsg(1);
                 fileOutputStream.write(buffer, 0, result);
                 fileOutputStream.flush();
                 finishedSize += result;
-                sendMsg(1);
             }
             sendMsg(2);
             inputStream.close();

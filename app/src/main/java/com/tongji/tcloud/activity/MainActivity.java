@@ -1,5 +1,6 @@
 package com.tongji.tcloud.activity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -17,6 +18,8 @@ import com.tongji.tcloud.R;
 import com.tongji.tcloud.fragment.DemoFragment;
 import com.tongji.tcloud.fragment.FolderFragment;
 import com.tongji.tcloud.fragment.PermissionFragment;
+import com.tongji.tcloud.fragment.UpdatePasswordFragment;
+import com.tongji.tcloud.model.App;
 import com.tongji.tcloud.model.RequestHelper;
 import com.tongji.tcloud.model.User;
 import com.tongji.tcloud.model.UsersResult;
@@ -31,15 +34,21 @@ public class MainActivity extends AppCompatActivity implements ActionSheet.Actio
 
     private int currentSelectItem = R.id.rl_fileManager;
 
-    private DemoFragment demoFragment;
+    private UpdatePasswordFragment updatePasswordFragment;
     private PermissionFragment userFragment;
     private FolderFragment fileFragment;
     private Fragment fragment;
+    private boolean IsRoot=false;
 
     private List<User> userList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+        String username=sharedPreferences.getString("username", "");
+        if(username.equals("root")){
+            IsRoot=true;
+        }
         setContentView(R.layout.activity_main);
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -52,10 +61,14 @@ public class MainActivity extends AppCompatActivity implements ActionSheet.Actio
     }
 
     private void initLeftMenu() {
+
         rlFileManager = (RelativeLayout) findViewById(R.id.rl_fileManager);
         rlPasswordManager = (RelativeLayout) findViewById(R.id.rl_password);
-        rlUserManager = (RelativeLayout) findViewById(R.id.rl_user);
 
+        rlUserManager = (RelativeLayout) findViewById(R.id.rl_user);
+        if(!IsRoot){
+            rlUserManager.setVisibility(View.INVISIBLE);
+        }
         rlFileManager.setOnClickListener(onLeftMenuClickListener);
         rlPasswordManager.setOnClickListener(onLeftMenuClickListener);
         rlUserManager.setOnClickListener(onLeftMenuClickListener);
@@ -108,13 +121,13 @@ public class MainActivity extends AppCompatActivity implements ActionSheet.Actio
             }
             fragment =fileFragment;
         } else if (resId == R.id.rl_password) {
-            if (demoFragment == null) {
-                demoFragment = new DemoFragment();
-                transaction.add(R.id.content_frame, demoFragment);
+            if (updatePasswordFragment == null) {
+                updatePasswordFragment = new UpdatePasswordFragment();
+                transaction.add(R.id.content_frame, updatePasswordFragment);
             } else {
-                transaction.show(demoFragment);
+                transaction.show(updatePasswordFragment);
             }
-            fragment = demoFragment;
+            fragment = updatePasswordFragment;
         } else if (resId == R.id.rl_user) {
             UsersResult usersResult=new RequestHelper().GetUsers();
             userList=new ArrayList<>();
@@ -140,8 +153,8 @@ public class MainActivity extends AppCompatActivity implements ActionSheet.Actio
     private void hideFragments(FragmentTransaction transaction) {
         if (fileFragment != null)//不为空才隐藏,如果不判断第一次会有空指针异常
             transaction.hide(fileFragment);
-        if (demoFragment != null)
-            transaction.hide(demoFragment);
+        if (updatePasswordFragment != null)
+            transaction.hide(updatePasswordFragment);
         if (userFragment != null)
             transaction.hide(userFragment);
     }

@@ -3,4 +3,13 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="dummy_email">userName</string>
+    <string name="dummy_password">123456</string>
+    <string name="Sign_in">登录</string>
+    <string name="Register">注册</string>
+    <string name="Submit">提交</string>
+    <string name="Update_Password">修改密码</string>
+    <string name="Success">Success</string>
+    <string name="Loading">Loading...</string>
 </resources>

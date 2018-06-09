@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.tongji.tcloud.R;
 import com.tongji.tcloud.adapter.LauncherPagerAdapter;
+import com.tongji.tcloud.model.App;
 
 /**
  * 第一次启动页面
@@ -107,8 +108,15 @@ public class LauncherActivity extends FragmentActivity{
 
 	public void gotoMain() {
 		setFirst();//设置成第二次启动
-
-		Intent intent = new Intent(this, MainActivity.class);
+		SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+		String username=sharedPreferences.getString("username", "");
+        Intent intent;
+		if( username.equals("")){
+            intent= new Intent(this, SignInActivity.class);
+		}
+		else{
+            intent= new Intent(this, MainActivity.class);
+        }
 		startActivity(intent);
 		finish();
 	}

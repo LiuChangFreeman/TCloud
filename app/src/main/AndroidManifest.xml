@@ -11,16 +11,29 @@
         android:supportsRtl="true"
         android:name=".model.App"
         android:theme="@style/AppTheme">
-        <activity
-            android:name="com.tongji.tcloud.activity.MainActivity"
-            android:label="@string/app_name"></activity>
-
         <activity android:name="com.tongji.tcloud.activity.LauncherActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.tongji.tcloud.activity.SignInActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Holo.Light" />
+
+        <activity
+            android:name="com.tongji.tcloud.activity.RegisterActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.Holo.Light" />
+
+        <activity
+            android:name="com.tongji.tcloud.activity.MainActivity"
+            android:label="@string/app_name" />
+
     </application>
 
 </manifest>

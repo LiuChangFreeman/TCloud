@@ -53,6 +53,8 @@ public class RequestHelper {
                 sb.append(theCookies.get(k).getName()).append("=").append(theCookies.get(k).getValue()).append(";");
             }
             preferences.edit().putString("cookies",sb.toString()).apply();
+            preferences.edit().putString("username",username).apply();
+
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -78,6 +80,7 @@ public class RequestHelper {
             }
             SharedPreferences preferences = App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
             preferences.edit().remove("cookies").apply();
+            preferences.edit().remove("username").apply();
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -115,7 +118,7 @@ public class RequestHelper {
         }
         return  requestResult;
     }
-    public RequestResult ChangePassword(String username,String oldpassword,String newpassword){
+    public RequestResult ChangePassword(String username,String oldpassword,String newpassword1,String newpassword2){
         RequestResult requestResult=new RequestResult();
         HttpClient httpClient=new DefaultHttpClient();
         String host=ConfigHelper.getProperties(App.getAppContext(), "host");
@@ -125,8 +128,8 @@ public class RequestHelper {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("username", username));
         params.add(new BasicNameValuePair("oldpassword", oldpassword));
-        params.add(new BasicNameValuePair("newpassword1", newpassword));
-        params.add(new BasicNameValuePair("newpassword2", newpassword));
+        params.add(new BasicNameValuePair("newpassword1", newpassword1));
+        params.add(new BasicNameValuePair("newpassword2", newpassword2));
         params.add(new BasicNameValuePair("mobile", "true"));
         try {
             httpPost.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
