@@ -12,10 +12,9 @@ import android.view.View.OnClickListener;
 import android.widget.RelativeLayout;
 
 import com.tongji.tcloud.R;
-import com.tongji.tcloud.adapter.FolderAdapter;
 import com.tongji.tcloud.fragment.DemoFragment;
 import com.tongji.tcloud.fragment.FolderFragment;
-import com.tongji.tcloud.model.RequestHelper;
+import com.tongji.tcloud.fragment.PermissionFragment;
 
 public class MainActivity extends AppCompatActivity {
     private DrawerLayout mDrawerLayout;
@@ -24,10 +23,10 @@ public class MainActivity extends AppCompatActivity {
 
     private int currentSelectItem = R.id.rl_fileManager;
 
-    private DemoFragment passwordFragment;
-    private DemoFragment userFragment;
+    private DemoFragment demoFragment;
+    private PermissionFragment userFragment;
     private FolderFragment fileFragment;
-    private Fragment fg;
+    private Fragment fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         initLeftMenu();//初始化左边菜单
 
         fileFragment = new FolderFragment();
-        fg=fileFragment;
+        fragment =fileFragment;
 		getSupportFragmentManager().beginTransaction().add(R.id.content_frame,fileFragment).commit();
     }
 
@@ -98,23 +97,23 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 transaction.show(fileFragment);
             }
-            fg=fileFragment;
-        } else if (resId == R.id.rl_user) {
-            if (passwordFragment == null) {
-                passwordFragment = new DemoFragment();
-                transaction.add(R.id.content_frame, passwordFragment);
-            } else {
-                transaction.show(passwordFragment);
-            }
-            fg=passwordFragment;
+            fragment =fileFragment;
         } else if (resId == R.id.rl_password) {
+            if (demoFragment == null) {
+                demoFragment = new DemoFragment();
+                transaction.add(R.id.content_frame, demoFragment);
+            } else {
+                transaction.show(demoFragment);
+            }
+            fragment = demoFragment;
+        } else if (resId == R.id.rl_user) {
             if (userFragment == null) {
-                userFragment = new DemoFragment();
+                userFragment = new PermissionFragment();
                 transaction.add(R.id.content_frame, userFragment);
             } else {
                 transaction.show(userFragment);
             }
-            fg=userFragment;
+            fragment =userFragment;
         }
         transaction.commitAllowingStateLoss();//一定要记得提交事务
     }
@@ -127,16 +126,19 @@ public class MainActivity extends AppCompatActivity {
     private void hideFragments(FragmentTransaction transaction) {
         if (fileFragment != null)//不为空才隐藏,如果不判断第一次会有空指针异常
             transaction.hide(fileFragment);
-        if (passwordFragment != null)
-            transaction.hide(passwordFragment);
+        if (demoFragment != null)
+            transaction.hide(demoFragment);
         if (userFragment != null)
             transaction.hide(userFragment);
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(fg instanceof FolderFragment){
-            return ((FolderFragment) fg).onKeyDown(keyCode, event);
+        if(fragment instanceof FolderFragment){
+            return ((FolderFragment) fragment).onKeyDown(keyCode, event);
+        }
+        else if(fragment instanceof PermissionFragment){
+            return ((PermissionFragment) fragment).onKeyDown(keyCode, event);
         }
         else{
             return onKeyDown(keyCode,event);

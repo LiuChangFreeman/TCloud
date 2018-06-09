@@ -115,4 +115,56 @@ public class RequestHelper {
         }
         return  requestResult;
     }
+    public FoldersResult ReadPermission(String path,String username){
+        FoldersResult foldersResult=new FoldersResult();
+        HttpClient httpClient=new DefaultHttpClient();
+        String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+        HttpGet httpGet = new HttpGet(host+"/permission?path="+path+"&username="+username);
+        SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+        httpGet.setHeader("Cookie", sharedPreferences.getString("cookies", ""));
+        try {
+            HttpResponse response = httpClient.execute(httpGet);
+            HttpEntity responseEntity = response.getEntity();
+            if(responseEntity!=null) {
+                String result = EntityUtils.toString(responseEntity, HTTP.UTF_8);
+                foldersResult= JSON.parseObject(result, FoldersResult.class);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            httpClient.getConnectionManager().shutdown();
+        }
+        return foldersResult;
+    }
+    public RequestResult SetPermission(String path,String username,String permission){
+        RequestResult requestResult=new RequestResult();
+        HttpClient httpClient=new DefaultHttpClient();
+        String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+        HttpPost httpPost = new HttpPost(host+"/permission");
+        SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+        httpPost.setHeader("Cookie", sharedPreferences.getString("cookies", ""));
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new BasicNameValuePair("username", username));
+        params.add(new BasicNameValuePair("submit", permission));
+        params.add(new BasicNameValuePair("path", path));
+        params.add(new BasicNameValuePair("mobile", "true"));
+        try {
+            httpPost.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
+            HttpResponse response = httpClient.execute(httpPost);
+            HttpEntity responseEntity = response.getEntity();
+            if(responseEntity!=null) {
+                String result = EntityUtils.toString(responseEntity, HTTP.UTF_8);
+                requestResult= JSON.parseObject(result, RequestResult.class);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            httpClient.getConnectionManager().shutdown();
+        }
+        return  requestResult;
+    }
 }

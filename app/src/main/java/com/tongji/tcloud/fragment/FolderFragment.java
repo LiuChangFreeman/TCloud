@@ -65,7 +65,7 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
         progressBar =(ProgressBar)view.findViewById(R.id.progress);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-        RequestResult requestResult= (new RequestHelper()).Login("root","123456");
+        RequestResult requestResult= (new RequestHelper()).Login("b12345678","123456");
         foldersResult=(new RequestHelper()).GetFolders("/home");
         currentPath="/home";
         list=getData(foldersResult);
@@ -138,11 +138,14 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             List<String> paths=new ArrayList<String>();
             paths.add(directory.path);
             requestResult=(new RequestHelper()).Delete(paths);
-            Toast.makeText(getActivity(), requestResult.msg, Toast.LENGTH_SHORT).show() ;
             if(requestResult.success){
+                Toast.makeText(getActivity(), requestResult.msg, Toast.LENGTH_SHORT).show() ;
                 list.remove(foldersResult.data.subdic.indexOf(directory));
                 foldersResult.data.subdic.remove(directory);
                 adapter.notifyDataSetChanged();
+            }
+            else{
+                Toast.makeText(getActivity(), requestResult.error, Toast.LENGTH_SHORT).show() ;
             }
         }
     };
