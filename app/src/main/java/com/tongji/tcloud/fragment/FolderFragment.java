@@ -1,8 +1,11 @@
 package com.tongji.tcloud.fragment;
 
 import com.alibaba.fastjson.JSON;
+import com.leon.lfilepickerlibrary.LFilePicker;
+import com.leon.lfilepickerlibrary.utils.Constant;
 import com.tongji.tcloud.R;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -48,29 +51,35 @@ import com.tongji.tcloud.activity.FolderActivity;
 import com.tongji.tcloud.adapter.FolderAdapter;
 import com.tongji.tcloud.model.*;
 
+import static android.app.Activity.RESULT_OK;
 import static android.content.Context.MODE_PRIVATE;
 
 public class FolderFragment extends Fragment implements AdapterView.OnItemClickListener {
+    private static final int REQUESTCODE_FROM_FRAGMENT = 1000;
     private ListView listView;
     private ProgressBar progressBar;
     private FoldersResult foldersResult;
     private RequestResult requestResult;
     private List<Map<String,Object>> list;
     private FolderAdapter adapter;
-    private RequestHelper requestHelper;
     private String currentPath;
-    private String uploadFile="files.zip";
+    private Directory selectedDirectory;
+    private String savePath;
+    private String host;
     int totalSize;
     int finishedSize;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.activity_folder, container,false);
+        savePath=Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/";
+        host=ConfigHelper.getProperties(App.getAppContext(), "host");
         listView = (ListView)view.findViewById(R.id.listView);
         progressBar =(ProgressBar)view.findViewById(R.id.progress);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-        RequestResult requestResult= (new RequestHelper()).Login("b12345678","123456");
+        requestResult=(new RequestHelper()).ChangePassword("b12345678","3456789","123456");
+        requestResult=(new RequestHelper()).Login("b12345678","123456");
         foldersResult=(new RequestHelper()).GetFolders("/home");
         currentPath="/home";
         list=getData(foldersResult);
@@ -114,24 +123,25 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
                 public void run() {
                     try {
                         if(directory.type.equals("file")){
-                            String host=ConfigHelper.getProperties(App.getAppContext(), "host");
                             String path=URLEncoder.encode(directory.path, HTTP.UTF_8);
                             String filename = directory.path.substring(directory.path.lastIndexOf('/') + 1);
-                            String savePath= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/";
                             downloadFile(host+"/download?path="+ path,savePath,filename);
                         }
                         else{
-                            String host=ConfigHelper.getProperties(App.getAppContext(), "host");
-                            String savePath= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath()+"/";
                             Map<String,String> params=new HashMap<>();
                             params.put("submit","下载");
                             params.put("path",directory.path);
-                            String fileName=directory.path.substring(directory.path.lastIndexOf('/'))+".zip";
+                            String fileName=directory.path.substring(directory.path.lastIndexOf('/')+1)+".zip";
                             downloadFolder(host+"/multiple",params,savePath+fileName);
-                            //UnzipHelper.Unzip(savePath+fileName,savePath);
-                            UnzipHelper.unPartZip(savePath+fileName,savePath);
+                            UnzipHelper.unzip(savePath+fileName,savePath,true);
                             File zipfile=new File(savePath+fileName);
                             zipfile.delete();
+                            Message msg = new Message();
+                            msg.what = -1;
+                            Bundle data = new Bundle();
+                            data.putString("error","文件夹传输完毕!");
+                            msg.setData(data);
+                            handler.sendMessage(msg);
                         }
                     }
                     catch (Exception e){
@@ -142,26 +152,25 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
         }
         @Override
         public void upload(final Directory directory) {
-            new Thread() {
-                public void run() {
-                    if(directory.type.equals("folder")) {
-                        String host = ConfigHelper.getProperties(App.getAppContext(), "host");
-                        Map<String, String> params = new HashMap<>();
-                        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + "/";
-                        params.put("path", directory.path);
-                        params.put("submit", "点我上传文件");
-                        uploadFile(host + "/upload", params, path + uploadFile);
-                    }
-                    else{
-                        Message msg = new Message();
-                        msg.what = -1;
-                        Bundle data = new Bundle();
-                        data.putString("error","非文件夹不能上传");
-                        msg.setData(data);
-                        handler.sendMessage(msg);
-                    }
-                }
-            }.start();
+            selectedDirectory=directory;
+            if(selectedDirectory.type.equals("folder")) {
+                String startPath= Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+                new LFilePicker().withSupportFragment(FolderFragment.this)
+                        .withRequestCode(REQUESTCODE_FROM_FRAGMENT)
+                        .withStartPath(startPath)
+                        .withMutilyMode(false)
+                        .withIconStyle(Constant.ICON_STYLE_YELLOW)
+                        .withTitle("选择文件")
+                        .start();
+            }
+            else{
+                Message msg = new Message();
+                msg.what = -1;
+                Bundle data = new Bundle();
+                data.putString("error","非文件夹不能上传");
+                msg.setData(data);
+                handler.sendMessage(msg);
+            }
         }
         @Override
         public void delete(final Directory directory) {
@@ -179,6 +188,24 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             }
         }
     };
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUESTCODE_FROM_FRAGMENT) {
+                List<String> list = data.getStringArrayListExtra("paths");
+                final String path = list.get(0);
+                new Thread() {
+                    public void run() {
+                        Map<String, String> params = new HashMap<>();
+                        params.put("path", selectedDirectory.path);
+                        params.put("submit", "点我上传文件");
+                        uploadFile(host + "/upload", params, path);
+                    }
+                }.start();
+            }
+        }
+    }
     @Override
     public void onItemClick(AdapterView<?> arg0, View v, int position, long id) {
         final Directory selected=foldersResult.data.subdic.get(position);

@@ -62,6 +62,31 @@ public class RequestHelper {
         }
         return  requestResult;
     }
+    public RequestResult LoginOff(String username){
+        RequestResult requestResult=new RequestResult();
+        HttpClient httpClient=new DefaultHttpClient();
+        String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+        HttpGet httpGet = new HttpGet(host+"/logoff?username="+username);
+        SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+        httpGet.setHeader("Cookie", sharedPreferences.getString("cookies", ""));
+        try {
+            HttpResponse response = httpClient.execute(httpGet);
+            HttpEntity responseEntity = response.getEntity();
+            if(responseEntity!=null) {
+                String result = EntityUtils.toString(responseEntity, HTTP.UTF_8);
+                requestResult= JSON.parseObject(result, RequestResult.class);
+            }
+            SharedPreferences preferences = App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+            preferences.edit().remove("cookies").apply();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            httpClient.getConnectionManager().shutdown();
+        }
+        return requestResult;
+    }
     public RequestResult Register(String username,String password){
         RequestResult requestResult=new RequestResult();
         HttpClient httpClient=new DefaultHttpClient();
@@ -224,5 +249,28 @@ public class RequestHelper {
             httpClient.getConnectionManager().shutdown();
         }
         return  requestResult;
+    }
+    public UsersResult GetUsers(){
+        UsersResult usersResult=new UsersResult();
+        HttpClient httpClient=new DefaultHttpClient();
+        String host=ConfigHelper.getProperties(App.getAppContext(), "host");
+        HttpGet httpGet = new HttpGet(host+"/manage");
+        SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+        httpGet.setHeader("Cookie", sharedPreferences.getString("cookies", ""));
+        try {
+            HttpResponse response = httpClient.execute(httpGet);
+            HttpEntity responseEntity = response.getEntity();
+            if(responseEntity!=null) {
+                String result = EntityUtils.toString(responseEntity, HTTP.UTF_8);
+                usersResult= JSON.parseObject(result, UsersResult.class);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            httpClient.getConnectionManager().shutdown();
+        }
+        return  usersResult;
     }
 }

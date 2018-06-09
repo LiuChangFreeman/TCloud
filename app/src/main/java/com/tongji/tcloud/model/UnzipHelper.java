@@ -56,14 +56,14 @@ public class UnzipHelper {
         }
         File zipFile = new File(zipFilePath);
         // 如果解压后的文件保存路径包含压缩文件的文件名，则追加该文件名到解压路径
-        if (includeZipFileName) {
-            String fileName = zipFile.getName();
-            fileName = fileName.substring(0, fileName.lastIndexOf("."));
-            unzipFilePath = unzipFilePath + File.separator + fileName;
-        }
+//        if (includeZipFileName) {
+//            String fileName = zipFile.getName();
+//            fileName = fileName.substring(0, fileName.lastIndexOf("."));
+//            unzipFilePath = unzipFilePath + fileName;
+//        }
         // 创建解压缩文件保存的路径
         File unzipFileDir = new File(unzipFilePath);
-        if (!unzipFileDir.exists() || !unzipFileDir.isDirectory()){
+        if (!unzipFileDir.exists()){
             unzipFileDir.mkdirs();
         }
 
@@ -82,6 +82,9 @@ public class UnzipHelper {
         while (entries.hasMoreElements()) {
             entry = entries.nextElement();
             if (entry.isDirectory()) {
+                entryFilePath = unzipFilePath + File.separator + entry.getName();
+                File entryFolder=new File(entryFilePath);
+                entryFolder.mkdir();
                 continue;
             }
             // 构建压缩包中一个文件解压后保存的文件全路径

@@ -1,5 +1,6 @@
 package com.tongji.tcloud.fragment;
 
+import com.baoyz.actionsheet.ActionSheet;
 import com.tongji.tcloud.R;
 
 import android.os.Bundle;
@@ -53,7 +54,7 @@ public class PermissionFragment extends Fragment implements AdapterView.OnItemCl
     private static List<Map<String,Object>> list;
     private PermissionAdapter adapter;
     private static String currentPath;
-    private String username="b12345678";
+    public String username;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

@@ -25,6 +25,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.alibaba:fastjson:1.2.47'
+    implementation 'com.baoyz.actionsheet:library:1.1.5'
+    implementation 'com.leon:lfilepickerlibrary:1.8.0'
     //noinspection GradleCompatible
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'

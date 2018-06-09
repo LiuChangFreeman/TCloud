@@ -10,13 +10,21 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
+import com.baoyz.actionsheet.ActionSheet;
 import com.tongji.tcloud.R;
 import com.tongji.tcloud.fragment.DemoFragment;
 import com.tongji.tcloud.fragment.FolderFragment;
 import com.tongji.tcloud.fragment.PermissionFragment;
+import com.tongji.tcloud.model.RequestHelper;
+import com.tongji.tcloud.model.User;
+import com.tongji.tcloud.model.UsersResult;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity implements ActionSheet.ActionSheetListener {
     private DrawerLayout mDrawerLayout;
 
     private RelativeLayout rlFileManager, rlPasswordManager, rlUserManager;
@@ -28,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private FolderFragment fileFragment;
     private Fragment fragment;
 
+    private List<User> userList;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,13 +116,18 @@ public class MainActivity extends AppCompatActivity {
             }
             fragment = demoFragment;
         } else if (resId == R.id.rl_user) {
-            if (userFragment == null) {
-                userFragment = new PermissionFragment();
-                transaction.add(R.id.content_frame, userFragment);
-            } else {
-                transaction.show(userFragment);
+            UsersResult usersResult=new RequestHelper().GetUsers();
+            userList=new ArrayList<>();
+            String users[]=new String[usersResult.data.users.size()];
+            for(User user:usersResult.data.users) {
+                userList.add(user);
+                users[userList.indexOf(user)]=user.username;
             }
-            fragment =userFragment;
+            ActionSheet.createBuilder(this, getSupportFragmentManager())
+                    .setCancelButtonTitle("取消")
+                    .setOtherButtonTitles(users)
+                    .setCancelableOnTouchOutside(true)
+                    .setListener(this).show();
         }
         transaction.commitAllowingStateLoss();//一定要记得提交事务
     }
@@ -143,5 +157,27 @@ public class MainActivity extends AppCompatActivity {
         else{
             return onKeyDown(keyCode,event);
         }
+    }
+
+    @Override
+    public void onDismiss(ActionSheet actionSheet, boolean isCancel) {
+
+    }
+
+    @Override
+    public void onOtherButtonClick(ActionSheet actionSheet, int index) {
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();//开启一个Fragment事务
+        hideFragments(transaction);
+        String username=userList.get(index).username;
+        if (userFragment == null) {
+            userFragment = new PermissionFragment();
+            transaction.add(R.id.content_frame, userFragment);
+        } else {
+            transaction.show(userFragment);
+        }
+        userFragment.username=username;
+        fragment =userFragment;
+        Toast.makeText(getApplicationContext(), "当前用户:"+username,Toast.LENGTH_SHORT).show();
+        transaction.commitAllowingStateLoss();
     }
 }
