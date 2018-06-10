@@ -324,7 +324,7 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             connection.setUseCaches(false);
             connection.setDoOutput(true);
             connection.setChunkedStreamingMode(4096);
-            connection.setConnectTimeout(10 * 60 * 1000);
+           // connection.setConnectTimeout(10 * 60 * 1000);
             OutputStream outputStream = connection.getOutputStream();
             outputStream.write(stringBuilder.toString().getBytes("UTF-8"));
             outputStream.close();
@@ -381,7 +381,7 @@ public class FolderFragment extends Fragment implements AdapterView.OnItemClickL
             connection.setChunkedStreamingMode(4096);
             connection.setUseCaches(false);
             connection.setDoOutput(true);
-            connection.setConnectTimeout(10 * 60 * 1000);
+            //connection.setConnectTimeout(10 * 60 * 1000);
 
             OutputStream outputStream = connection.getOutputStream();
             InputStream inputStream = new FileInputStream(uploadFile);
