@@ -18,7 +18,7 @@
         <com.tongji.tcloud.views.CircleImageView
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@mipmap/timg" />
+            android:src="@mipmap/ic_launcher" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -40,10 +40,10 @@
 
         <ImageView
             android:id="@+id/iv_home"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_centerVertical="true"
-            android:src="@mipmap/nav_icon_home" />
+            android:src="@drawable/thefile" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -69,10 +69,10 @@
 
         <ImageView
             android:id="@+id/iv_gift"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_centerVertical="true"
-            android:src="@mipmap/nav_icon_gift" />
+            android:src="@drawable/password" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -98,10 +98,10 @@
 
         <ImageView
             android:id="@+id/iv_share"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_centerVertical="true"
-            android:src="@mipmap/nav_icon_my_shares" />
+            android:src="@drawable/user" />
 
         <TextView
             android:layout_width="wrap_content"

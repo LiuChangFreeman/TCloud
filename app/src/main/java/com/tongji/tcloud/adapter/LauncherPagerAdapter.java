@@ -21,8 +21,7 @@ public class LauncherPagerAdapter extends PagerAdapter{
 	private List<View> views;
 
 	//每页显示的图片
-	private int[] images=new int[]{R.mipmap.tutorial_1,R.mipmap.tutorial_2,
-			R.mipmap.tutorial_3,R.mipmap.tutorial_4};
+	private int[] images=new int[]{R.mipmap.tutorial_1,R.mipmap.tutorial_2,R.mipmap.tutorial_4};
 
 	public LauncherPagerAdapter(Context context){
 		views=new ArrayList<View>();

@@ -48,7 +48,7 @@ public class LauncherActivity extends FragmentActivity{
 		viewPager.setOnPageChangeListener(changeListener);//页面监听
 
 		ViewGroup group = (ViewGroup) findViewById(R.id.viewGroup);//初始化底部显示控件
-		tips = new ImageView[4];
+		tips = new ImageView[3];
 		for (int i = 0; i < tips.length; i++) {
 			ImageView imageView = new ImageView(this);
 			if (i == 0) {
