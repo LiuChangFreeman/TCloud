@@ -1,7 +1,9 @@
 package com.tongji.tcloud.activity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
@@ -15,7 +17,6 @@ import android.widget.Toast;
 
 import com.baoyz.actionsheet.ActionSheet;
 import com.tongji.tcloud.R;
-import com.tongji.tcloud.fragment.DemoFragment;
 import com.tongji.tcloud.fragment.FolderFragment;
 import com.tongji.tcloud.fragment.PermissionFragment;
 import com.tongji.tcloud.fragment.UpdatePasswordFragment;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements ActionSheet.Actio
     private UpdatePasswordFragment updatePasswordFragment;
     private PermissionFragment userFragment;
     private FolderFragment fileFragment;
+    private RelativeLayout rlLogout;
     private Fragment fragment;
     private boolean IsRoot=false;
 
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements ActionSheet.Actio
 
     private void initLeftMenu() {
 
+        rlLogout =(RelativeLayout) findViewById(R.id.rl_logout);
         rlFileManager = (RelativeLayout) findViewById(R.id.rl_fileManager);
         rlPasswordManager = (RelativeLayout) findViewById(R.id.rl_password);
 
@@ -72,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements ActionSheet.Actio
         rlFileManager.setOnClickListener(onLeftMenuClickListener);
         rlPasswordManager.setOnClickListener(onLeftMenuClickListener);
         rlUserManager.setOnClickListener(onLeftMenuClickListener);
-
+        rlLogout.setOnClickListener(onLeftMenuClickListener);
         rlFileManager.setSelected(true);
     }
 
@@ -96,6 +99,17 @@ public class MainActivity extends AppCompatActivity implements ActionSheet.Actio
                         break;
                     case R.id.rl_user:
                         rlUserManager.setSelected(true);
+                        break;
+                    case R.id.rl_logout:
+                    {
+                        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                        StrictMode.setThreadPolicy(policy);
+                        SharedPreferences sharedPreferences =  App.getAppContext().getSharedPreferences("cookies", MODE_PRIVATE);
+                        sharedPreferences.edit().remove("cookies").apply();
+                        sharedPreferences.edit().remove("username").apply();
+                        Intent intent = new Intent(App.getAppContext(), SignInActivity.class);
+                        startActivity(intent);
+                    }
                         break;
                 }
                 mDrawerLayout.closeDrawer(Gravity.LEFT);

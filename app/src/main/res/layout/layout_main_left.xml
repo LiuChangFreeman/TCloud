@@ -90,6 +90,34 @@
         android:background="@color/split_line" />
 
     <RelativeLayout
+        android:id="@+id/rl_logout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_left_menu_item"
+        android:padding="@dimen/menu_left_item_padding">
+
+        <ImageView
+            android:id="@+id/iv_logout"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:src="@drawable/user" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="30dp"
+            android:layout_toRightOf="@+id/iv_logout"
+            android:text="账号退出"
+            android:textColor="@drawable/selector_left_menu_item_text_color" />
+    </RelativeLayout>
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="1dp"
+        android:background="@color/split_line" />
+
+    <RelativeLayout
         android:id="@+id/rl_user"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -101,7 +129,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_centerVertical="true"
-            android:src="@drawable/user" />
+            android:src="@drawable/privillege" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -109,10 +137,9 @@
             android:layout_centerVertical="true"
             android:layout_marginLeft="30dp"
             android:layout_toRightOf="@+id/iv_share"
-            android:text="用户管理"
+            android:text="权限管理"
             android:textColor="@drawable/selector_left_menu_item_text_color" />
     </RelativeLayout>
-
     <!--<RelativeLayout-->
     <!--android:id="@+id/rl_subscribed_subjects"-->
     <!--android:layout_width="match_parent"-->
